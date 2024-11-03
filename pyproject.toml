@@ -42,6 +42,7 @@ black = "^24.10.0"
 ruff = "^0.7.1"
 mypy = "^1.13.0"
 sqlalchemy-stubs = "^0.4"
+jupyter = "^1.1.1"
 
 [build-system]
 requires = ["poetry-core"]
