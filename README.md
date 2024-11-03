@@ -1,7 +1,7 @@
 # Tiny GraphRAG
 
 <p align="center">
-  <img src=".github/logo.jpeg" alt="Tiny GraphRAG Logo" width="200"/>
+  <img src=".github/logo.jpeg" alt="Tiny GraphRAG Logo" width="500"/>
 </p>
 
 A tiny 1000 line implementation of the GraphRAG algorithm using only language
