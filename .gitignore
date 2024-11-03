@@ -156,5 +156,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-outputs
 *.png
+*.pkl
+*.gguf

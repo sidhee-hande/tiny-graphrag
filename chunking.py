@@ -1,11 +1,11 @@
-from sentence_transformers import SentenceTransformer
-import numpy as np
 from typing import List, Tuple, cast
+import numpy as np
 import numpy.typing as npt
+from sentence_transformers import SentenceTransformer
 
 # Initialize the model
-model = SentenceTransformer("all-MiniLM-L6-v2")
-# model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
+# model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
 
 def chunk_document(
@@ -37,7 +37,9 @@ def chunk_document(
             # Join the current chunk sentences and get embedding
             chunk_text = ". ".join(current_chunk) + "."
             # Convert tensor to numpy array
-            embedding = model.encode(chunk_text, convert_to_numpy=True)
+            embedding = model.encode(
+                chunk_text, convert_to_numpy=True, show_progress_bar=False
+            )
             chunks.append((chunk_text, embedding))
 
             # Start new chunk with overlap

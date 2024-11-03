@@ -1,8 +1,8 @@
-# Tiny GraphRAG
-
 <p align="center">
   <img src=".github/logo.jpeg" alt="Tiny GraphRAG Logo" width="500"/>
 </p>
+
+# Tiny GraphRAG
 
 A tiny 1000 line implementation of the GraphRAG algorithm using only language
 models that run locally. This implementation is designed to be easy to be

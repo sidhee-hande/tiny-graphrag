@@ -1,10 +1,12 @@
 from cdlib import algorithms
 import networkx as nx
 from llama_cpp import Llama
+import pickle
 
-from chunk import chunk_document, model
+from chunking import chunk_document, model
 from extract import extract_rels
 from visualize import visualize, visualize_communities
+from tqdm import tqdm
 
 
 def build_chunks(ifile):
@@ -16,7 +18,7 @@ def build_chunks(ifile):
 def build_graph(page_chunks, max_chunks=-1):
     g = nx.Graph()
 
-    for chunk_text, embedding in page_chunks[:max_chunks]:
+    for chunk_text, embedding in tqdm(page_chunks[:max_chunks]):
         ents, rels = extract_rels(chunk_text)
 
         for ent in ents:
@@ -217,10 +219,13 @@ def main():
         # n_ctx=8192 # Uncomment for larger context windows
     )
 
+    # Build graph
     page_chunks = build_chunks("data/Barack_Obama.txt")
     g = build_graph(page_chunks, max_chunks=10)
 
-    nx.write_gpickle(g, "graph.gpickle")
+    # Save graph to pickle file
+    with open("graph.pkl", "wb") as f:
+        pickle.dump(g, f, pickle.HIGHEST_PROTOCOL)
 
     # Visualize the graph
     visualize(g, "graph.png")
