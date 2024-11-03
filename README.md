@@ -8,6 +8,9 @@ A tiny 1000 line implementation of the GraphRAG algorithm using only language
 models that run locally. This implementation is designed to be easy to be
 easily understandable, hackable and extendable.
 
+Notably this implementation does not use OpenAI or Anthropic and can be configured
+to run locally on private data using only a MacBook Pro.
+
 | Component         | Implementation                                    |
 |------------------|--------------------------------------------------|
 | Vector Database  | [pgvector](https://github.com/pgvector/pgvector) |

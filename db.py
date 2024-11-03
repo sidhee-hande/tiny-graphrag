@@ -39,6 +39,9 @@ class Document(Base):
     chunks = relationship(
         "DocumentChunk", back_populates="document", cascade="all, delete-orphan"
     )
+    communities = relationship(
+        "Community", back_populates="document", cascade="all, delete-orphan"
+    )
 
 
 class DocumentChunk(Base):
@@ -97,6 +100,31 @@ class Summary(Base):
             "ix_summaries_content_fts",
             text("to_tsvector('english', content)"),
             postgresql_using="gin",
+        ),
+    )
+
+
+class Community(Base):
+    __tablename__ = "communities"
+
+    id = Column(Integer, primary_key=True)
+    document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
+    content = Column(Text, nullable=False)  # Summary text
+    embedding = mapped_column(Vector(384), nullable=False)
+    nodes = Column(Text, nullable=False)  # JSON string of node IDs
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    document = relationship("Document", back_populates="communities")
+
+    # Indexes
+    __table_args__ = (
+        Index(
+            "ix_communities_embedding",
+            embedding,
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_l2_ops"},
         ),
     )
 
