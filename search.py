@@ -24,9 +24,10 @@ def hybrid_search(query: str, limit: int = 5, k: int = 60) -> List[SearchResult]
     Perform hybrid search combining semantic and keyword search.
     """
     # Generate embedding for the query
-    query_embedding = model.encode(query)
+    query_embedding = model.encode(
+        query, show_progress_bar=False, convert_to_numpy=True
+    )
 
-    # SQL for hybrid search using RRF (Reciprocal Rank Fusion)
     sql = text(
         """
     WITH semantic_search AS (
@@ -80,13 +81,3 @@ def hybrid_search(query: str, limit: int = 5, k: int = 60) -> List[SearchResult]
         ]
     finally:
         session.close()
-
-
-# Implmenet an example search
-if __name__ == "__main__":
-    results = hybrid_search("the color white")
-    for result in results:
-        print(
-            f"Document ID: {result.document_id}, Content: {result.content}, Score: {result.score}"
-        )
-        print("-" * 100)

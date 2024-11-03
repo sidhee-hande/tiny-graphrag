@@ -8,7 +8,7 @@ from typing import List, Union, Set
 def visualize(
     graph: nx.Graph,
     output_path: str = "graph.png",
-    figsize: tuple = (10, 10),
+    figsize: tuple[int, int] = (10, 10),
     node_size: int = 500,
     node_color: str = "#1f78b4",
     font_size: int = 10,

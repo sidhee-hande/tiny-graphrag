@@ -64,7 +64,9 @@ def chunk_document(
     if current_chunk:
         chunk_text = ". ".join(current_chunk) + "."
         # Convert tensor to numpy array
-        embedding = model.encode(chunk_text, convert_to_numpy=True)
+        embedding = model.encode(
+            chunk_text, convert_to_numpy=True, show_progress_bar=False
+        )
         chunks.append((chunk_text, embedding))
 
     return chunks

@@ -9,8 +9,7 @@ from sqlalchemy import (
     Index,
     text,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import DeclarativeBase  # type: ignore
+from sqlalchemy.orm import relationship, DeclarativeBase  # type: ignore
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import mapped_column  # type: ignore

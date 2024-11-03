@@ -16,7 +16,7 @@ from config import MODEL_REPO, MODEL_ID
 
 
 def process_document(
-    filepath: str, title: str = None
+    filepath: str, title: str = None, max_chunks: int = -1
 ) -> Tuple[List[Tuple[str, any]], nx.Graph]:
     """Process a document and return chunks and graph"""
     # Read and chunk document
@@ -26,7 +26,7 @@ def process_document(
     # Build graph
     g = nx.Graph()
 
-    for chunk_text, embedding in tqdm(page_chunks):
+    for chunk_text, embedding in tqdm(page_chunks[:max_chunks]):
         ents, rels = extract_rels(chunk_text)
 
         for ent in ents:
@@ -38,7 +38,45 @@ def process_document(
     return page_chunks, g
 
 
-def store_document(filepath: str, title: str = None):
+def generate_community_summary(llm, community, max_triples=30):
+    """Generate a summary for a community, chunking if needed"""
+    # Chunk the community into smaller pieces if too large
+    chunks = [
+        community[i : i + max_triples] for i in range(0, len(community), max_triples)
+    ]
+
+    summaries = []
+    for chunk in chunks:
+        response = llm.create_chat_completion(
+            messages=[
+                {
+                    "role": "user",
+                    "content": COMMUNITY_SUMMARY.format(community=chunk),
+                }
+            ],
+            temperature=0.2,
+        )
+        summaries.append(response["choices"][0]["message"]["content"])
+
+    # If we had multiple chunks, combine them
+    if len(summaries) > 1:
+        combined = " ".join(summaries)
+        # Generate a final summary of the combined text
+        response = llm.create_chat_completion(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Summarize these related points into a single coherent paragraph: {combined}",
+                }
+            ],
+            temperature=0.2,
+        )
+        return response["choices"][0]["message"]["content"]
+
+    return summaries[0]
+
+
+def store_document(filepath: str, title: str = None, max_chunks: int = -1):
     """Store document in database and save graph"""
     # Initialize database and LLM
     init_db()
@@ -46,12 +84,12 @@ def store_document(filepath: str, title: str = None):
     session = SessionLocal()
 
     llm = Llama.from_pretrained(
-        repo_id=MODEL_REPO, filename=MODEL_ID, local_dir=".", verbose=False, n_ctx=2048
+        repo_id=MODEL_REPO, filename=MODEL_ID, local_dir=".", verbose=False, n_ctx=4096
     )
 
     try:
         # Process document
-        chunks, graph = process_document(filepath, title)
+        chunks, graph = process_document(filepath, title, max_chunks)
 
         # Store document
         doc = Document(content=open(filepath).read(), title=title or filepath)
@@ -73,20 +111,13 @@ def store_document(filepath: str, title: str = None):
 
         # Generate and store community summaries
         for community in communities:
-            # Generate summary
-            response = llm.create_chat_completion(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": COMMUNITY_SUMMARY.format(community=community),
-                    }
-                ],
-                temperature=0.2,
-            )
-            summary = response["choices"][0]["message"]["content"]
+            # Generate summary with chunking
+            summary = generate_community_summary(llm, community)
 
             # Get embedding for summary
-            embedding = model.encode(summary, convert_to_numpy=True)
+            embedding = model.encode(
+                summary, convert_to_numpy=True, show_progress_bar=False
+            )
 
             # Store community
             community_obj = Community(

@@ -2,11 +2,12 @@ import pickle
 import networkx as nx
 from llama_cpp import Llama
 from sqlalchemy.orm import sessionmaker
+from tqdm import tqdm
 
-from search import hybrid_search
 from config import MODEL_REPO, MODEL_ID
 from db import engine
 from prompts import LOCAL_SEARCH
+from db import Community
 
 
 class QueryEngine:
@@ -72,23 +73,57 @@ class QueryEngine:
         return response["choices"][0]["message"]["content"]
 
     def global_search(self, query: str, doc_id: int, limit: int = 5) -> str:
-        """Perform global search using vector database"""
-        results = hybrid_search(query, limit=limit)
+        """Perform global search using community summaries and vector database"""
+        # Create session
+        session = self.SessionLocal()
+        try:
+            # Get all community summaries for the document
+            communities = (
+                session.query(Community).filter(Community.document_id == doc_id).all()
+            )
 
-        # Combine results into final response
-        context = "\n\n".join([r.content for r in results])
-        response = self.llm.create_chat_completion(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Answer the query based on the provided context.",
-                },
-                {"role": "user", "content": f"Context:\n{context}\n\nQuery: {query}"},
-            ],
-            temperature=0.3,
-        )
+            # Map phase - get answers from each community
+            intermediate_answers = []
+            print("Performing map phase over communities.")
 
-        return response["choices"][0]["message"]["content"]
+            for community in tqdm(communities):
+                response = self.llm.create_chat_completion(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "Answer the query based only on the provided community summary. If the summary doesn't contain relevant information, say 'No relevant information found.'",
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Community Summary:\n{community.content}\n\nQuery: {query}",
+                        },
+                    ],
+                    temperature=0.7,
+                )
+                answer = response["choices"][0]["message"]["content"]
+                if "No relevant information found" not in answer:
+                    intermediate_answers.append(answer)
+
+            # Reduce phase - combine community answers
+            print("Performing reduce phase over community answers.")
+            response = self.llm.create_chat_completion(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Combine the provided answers into a single coherent response that fully addresses the query.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Query: {query}\n\nAnswers to combine:\n{' '.join(intermediate_answers)}",
+                    },
+                ],
+                temperature=0.7,
+            )
+
+            return response["choices"][0]["message"]["content"]
+
+        finally:
+            session.close()
 
     def _build_context(self, relevant_data: dict) -> str:
         return f"""

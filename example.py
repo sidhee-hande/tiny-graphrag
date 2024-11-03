@@ -2,14 +2,17 @@ import argparse
 from pathlib import Path
 from build import store_document
 from query import QueryEngine
+from termcolor import colored
 
 
 def build_mode(args):
     """Handle document processing and storage"""
     print(f"Processing document: {args.input}")
-    doc_id, graph_path = store_document(args.input, title=Path(args.input).stem)
-    print(f"Document stored with ID {doc_id}")
-    print(f"Graph saved to {graph_path}")
+    doc_id, graph_path = store_document(
+        args.input, title=Path(args.input).stem, max_chunks=25
+    )
+    print(colored(f"Success! Document stored with ID: {doc_id}", "green"))
+    print(colored(f"Graph saved to: {graph_path}", "green"))
 
 
 def query_mode(args):

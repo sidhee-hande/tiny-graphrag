@@ -6,10 +6,11 @@
 
 A tiny 1000 line implementation of the GraphRAG algorithm using only language
 models that run locally. This implementation is designed to be easy to be
-easily understandable, hackable and extendable.
+easily understandable, hackable and extendable and not dependent on any
+framework.
 
-Notably this implementation does not use OpenAI or Anthropic and can be configured
-to run locally on private data using only a MacBook Pro.
+Notably this implementation does not use OpenAI or any commercial LLM providers
+and can be configured to run locally on private data using only a MacBook Pro.
 
 | Component         | Implementation                                    |
 |------------------|--------------------------------------------------|
@@ -31,20 +32,31 @@ poetry install
 
 To setup the local vector database create the docker container with:
 
-```bash
+```shell
 docker-compose up -d
 ```
 
 Then create the database tables with:
 
-```bash
+```shell
 poetry run python db.py
 ```
 
-To run the example:
+To build the graph and embeddings for a document run:
 
-```bash
-poetry run python example.py
+```shell
+poetry run python example build data/Barack_Obama.txt
+```
+
+To query use either the `local` or `global` mode and provide the path to the graph
+file and the query:
+
+```shell
+# Local search
+poetry run python example.py query local --graph graphs/21_graph.pkl "What did Barack Obama study at Columbia University?"
+
+# Global search
+poetry run python example.py query global --graph graphs/21_graph.pkl  --doc-id 21 "What are the main themes of this document?"
 ```
 
 ## Performance
