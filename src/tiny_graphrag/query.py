@@ -6,7 +6,13 @@ from tqdm import tqdm
 
 from tiny_graphrag.config import MODEL_REPO, MODEL_ID
 from tiny_graphrag.db import engine
-from tiny_graphrag.prompts import LOCAL_SEARCH
+from tiny_graphrag.prompts import (
+    LOCAL_SEARCH,
+    LOCAL_SEARCH_RESPONSE,
+    GLOBAL_SEARCH_COMMUNITY,
+    GLOBAL_SEARCH_COMBINE,
+    NAIVE_SEARCH_RESPONSE,
+)
 from tiny_graphrag.db import Community
 
 
@@ -63,7 +69,7 @@ class QueryEngine:
             messages=[
                 {
                     "role": "system",
-                    "content": "Answer the query using only the provided context. Be specific and concise.",
+                    "content": LOCAL_SEARCH_RESPONSE,
                 },
                 {"role": "user", "content": f"Context:\n{context}\n\nQuery: {query}"},
             ],
@@ -91,7 +97,7 @@ class QueryEngine:
                     messages=[
                         {
                             "role": "system",
-                            "content": "Answer the query based only on the provided community summary. If the summary doesn't contain relevant information, say 'No relevant information found.'",
+                            "content": GLOBAL_SEARCH_COMMUNITY,
                         },
                         {
                             "role": "user",
@@ -110,7 +116,7 @@ class QueryEngine:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Combine the provided answers into a single coherent response that fully addresses the query.",
+                        "content": GLOBAL_SEARCH_COMBINE,
                     },
                     {
                         "role": "user",
@@ -135,6 +141,30 @@ class QueryEngine:
         Supporting Text:
         {'\n'.join(relevant_data['text_chunks'])}
         """
+
+    def naive_search(self, query: str, limit: int = 5) -> str:
+        """Perform naive RAG search using hybrid vector + keyword search"""
+        from tiny_graphrag.search import hybrid_search
+
+        # Get relevant chunks using hybrid search
+        search_results = hybrid_search(query, limit=limit)
+
+        # Build context from search results
+        context = "\n\n".join([result.content for result in search_results])
+
+        # Generate response using LLM
+        response = self.llm.create_chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": NAIVE_SEARCH_RESPONSE,
+                },
+                {"role": "user", "content": f"Context:\n{context}\n\nQuery: {query}"},
+            ],
+            temperature=0.3,
+        )
+
+        return response["choices"][0]["message"]["content"]
 
 
 if __name__ == "__main__":

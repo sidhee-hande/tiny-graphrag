@@ -6,7 +6,7 @@ from tqdm import tqdm
 import json
 from llama_cpp import Llama
 
-from tiny_graphrag.prompts import COMMUNITY_SUMMARY
+from tiny_graphrag.prompts import COMMUNITY_SUMMARY, COMMUNITY_COMBINE
 from tiny_graphrag.chunking import chunk_document, model
 from tiny_graphrag.communities import build_communities
 from tiny_graphrag.extract import extract_rels
@@ -38,7 +38,7 @@ def process_document(
     return page_chunks, g
 
 
-def generate_community_summary(llm, community, max_triples=30):
+def generate_community_summary(llm, community, max_triples=30, temperature=0.2):
     """Generate a summary for a community, chunking if needed"""
     # Chunk the community into smaller pieces if too large
     chunks = [
@@ -54,7 +54,7 @@ def generate_community_summary(llm, community, max_triples=30):
                     "content": COMMUNITY_SUMMARY.format(community=chunk),
                 }
             ],
-            temperature=0.2,
+            temperature=temperature,
         )
         summaries.append(response["choices"][0]["message"]["content"])
 
@@ -66,17 +66,19 @@ def generate_community_summary(llm, community, max_triples=30):
             messages=[
                 {
                     "role": "user",
-                    "content": f"Summarize these related points into a single coherent paragraph: {combined}",
+                    "content": COMMUNITY_COMBINE.format(combined=combined),
                 }
             ],
-            temperature=0.2,
+            temperature=temperature,
         )
         return response["choices"][0]["message"]["content"]
 
     return summaries[0]
 
 
-def store_document(filepath: str, title: str = None, max_chunks: int = -1):
+def store_document(
+    filepath: str, title: str = None, max_chunks: int = -1, temperature: float = 0.2
+):
     """Store document in database and save graph"""
     # Initialize database and LLM
     init_db()
@@ -107,12 +109,14 @@ def store_document(filepath: str, title: str = None, max_chunks: int = -1):
             session.add(chunk)
 
         # Build and store communities
-        communities, community_map = build_communities(graph)
+        community_result = build_communities(graph)
 
         # Generate and store community summaries
-        for community in communities:
+        for community in community_result.communities:
             # Generate summary with chunking
-            summary = generate_community_summary(llm, community)
+            summary = generate_community_summary(
+                llm, community, temperature=temperature
+            )
 
             # Get embedding for summary
             embedding = model.encode(
@@ -127,8 +131,8 @@ def store_document(filepath: str, title: str = None, max_chunks: int = -1):
                 nodes=json.dumps(
                     [
                         n
-                        for n, c in community_map.items()
-                        if c == communities.index(community)
+                        for n, c in community_result.node_community_map.items()
+                        if c == community_result.communities.index(community)
                     ]
                 ),
             )
@@ -141,7 +145,9 @@ def store_document(filepath: str, title: str = None, max_chunks: int = -1):
 
         # Visualize graphs
         visualize(graph, f"graphs/{doc.id}_graph.png")
-        visualize_communities(graph, communities, f"graphs/{doc.id}_communities.png")
+        visualize_communities(
+            graph, community_result.communities, f"graphs/{doc.id}_communities.png"
+        )
 
         session.commit()
         return doc.id, graph_path
@@ -151,8 +157,3 @@ def store_document(filepath: str, title: str = None, max_chunks: int = -1):
         raise e
     finally:
         session.close()
-
-
-if __name__ == "__main__":
-    doc_id, graph_path = store_document("data/Barack_Obama.txt", "Barack Obama")
-    print(f"Stored document {doc_id}, graph saved to {graph_path}")

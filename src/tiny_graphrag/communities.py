@@ -1,8 +1,19 @@
 import networkx as nx
 from cdlib import algorithms
+from typing import List, Tuple, Dict
+from dataclasses import dataclass
 
 
-def build_communities(g):
+@dataclass
+class CommunityResult:
+    communities: List[List[Tuple[str, str, str, str]]]
+    node_community_map: Dict[str, int]
+
+
+def build_communities(g: nx.Graph) -> CommunityResult:
+    """
+    Build communities from a graph.
+    """
     communities = []
     node_community_map = {}
 
@@ -43,8 +54,10 @@ def build_communities(g):
             pass
 
     # Print the mapping (optional)
-    print("\nNode Community Mapping:")
-    for node, community_id in node_community_map.items():
-        print(f"Node: {node} -> Community: {community_id}")
+    # print("\nNode Community Mapping:")
+    # for node, community_id in node_community_map.items():
+    #     print(f"Node: {node} -> Community: {community_id}")
 
-    return communities, node_community_map
+    return CommunityResult(
+        communities=communities, node_community_map=node_community_map
+    )

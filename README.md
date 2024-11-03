@@ -6,11 +6,11 @@
 
 A tiny 1000 line implementation of the GraphRAG algorithm using only language
 models that run locally. This implementation is designed to be easy to be
-easily understandable, hackable and extendable and not dependent on any
+easily understandable, hackable and forkable and not dependent on any
 framework.
 
-Notably this implementation does not use OpenAI or any commercial LLM providers
-and can be configured to run locally on private data using only a MacBook Pro.
+Notably we do not use OpenAI or any commercial LLM providers and can be run
+locally.
 
 | Component         | Implementation                                    |
 |------------------|--------------------------------------------------|
@@ -68,11 +68,17 @@ will improve the performance.
 
 **Apple Silicon**
 
+To run with acceleration you'll need the `apple` extras with `thinc-apple-ops`
+installed.
+
 ```bash
 poetry install --with apple
 ```
 
 **Nvidia GPU**
+
+To run with acceleration you'll need the `nvidia` extras to run `transformers`
+and `flash-attn`.
 
 ```bash
 poetry install --with nvidia

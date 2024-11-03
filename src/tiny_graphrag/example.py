@@ -5,6 +5,7 @@ from termcolor import colored
 from tiny_graphrag.build import store_document
 from tiny_graphrag.query import QueryEngine
 
+
 def build_mode(args):
     """Handle document processing and storage"""
     print(f"Processing document: {args.input}")
