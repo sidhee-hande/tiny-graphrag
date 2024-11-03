@@ -5,14 +5,14 @@ from sqlalchemy.orm import sessionmaker
 from tqdm import tqdm
 import json
 from llama_cpp import Llama
-from prompts import COMMUNITY_SUMMARY
 
-from chunking import chunk_document, model
-from communities import build_communities
-from extract import extract_rels
-from visualize import visualize, visualize_communities
-from db import Document, DocumentChunk, init_db, engine, Community
-from config import MODEL_REPO, MODEL_ID
+from tiny_graphrag.prompts import COMMUNITY_SUMMARY
+from tiny_graphrag.chunking import chunk_document, model
+from tiny_graphrag.communities import build_communities
+from tiny_graphrag.extract import extract_rels
+from tiny_graphrag.visualize import visualize, visualize_communities
+from tiny_graphrag.db import Document, DocumentChunk, init_db, engine, Community
+from tiny_graphrag.config import MODEL_REPO, MODEL_ID
 
 
 def process_document(

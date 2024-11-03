@@ -15,7 +15,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import mapped_column  # type: ignore
 from sqlalchemy.engine import Engine
 
-from config import DB_URI
+from tiny_graphrag.config import DB_URI
 
 
 class Base(DeclarativeBase):  # type: ignore

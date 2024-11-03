@@ -4,10 +4,10 @@ from llama_cpp import Llama
 from sqlalchemy.orm import sessionmaker
 from tqdm import tqdm
 
-from config import MODEL_REPO, MODEL_ID
-from db import engine
-from prompts import LOCAL_SEARCH
-from db import Community
+from tiny_graphrag.config import MODEL_REPO, MODEL_ID
+from tiny_graphrag.db import engine
+from tiny_graphrag.prompts import LOCAL_SEARCH
+from tiny_graphrag.db import Community
 
 
 class QueryEngine:

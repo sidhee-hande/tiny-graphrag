@@ -3,8 +3,8 @@ from glirel import GLiREL
 from gliner import GLiNER
 from functools import cache
 
-from rel_types import rel_labels_list
-from entity_types import MIN_ENTITY_TYPES
+from tiny_graphrag.rel_types import rel_labels_list
+from tiny_graphrag.entity_types import MIN_ENTITY_TYPES
 
 # Initialize GLiNER with the base model
 model1 = GLiNER.from_pretrained("urchade/gliner_mediumv2.1")

@@ -1,9 +1,9 @@
 import argparse
 from pathlib import Path
-from build import store_document
-from query import QueryEngine
 from termcolor import colored
 
+from tiny_graphrag.build import store_document
+from tiny_graphrag.query import QueryEngine
 
 def build_mode(args):
     """Handle document processing and storage"""

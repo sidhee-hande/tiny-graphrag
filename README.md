@@ -79,6 +79,32 @@ poetry install --with nvidia
 poetry run pip install flash-attn --no-build-isolation
 ```
 
+## Library
+
+You can also this library directly.
+
+```python
+from tiny_graphrag import store_document, QueryEngine
+
+# Process and store a document
+doc_id, graph_path = store_document(
+    filepath="data/Barack_Obama.txt",
+    title="Barack Obama Wikipedia",
+)
+
+query_engine = QueryEngine()
+
+result = query_engine.local_search(
+    query="What did Barack Obama study at Columbia University?",
+    graph_path=graph_path
+)
+
+result = query_engine.global_search(
+    query="What are the main themes of this document?",
+    doc_id=doc_id
+)
+```
+
 License
 -------
 
