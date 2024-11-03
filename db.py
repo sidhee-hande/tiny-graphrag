@@ -120,7 +120,7 @@ def init_db() -> Engine:
             if isinstance(index, Index):
                 try:
                     index.create(engine)
-                except Exception as e:
+                except Exception:
                     print(f"Index already exists, skipping: {index.name}")
 
     print("Done.")

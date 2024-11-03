@@ -18,6 +18,52 @@ easily understandable, hackable and extendable.
 | Graph Database  | networkx            |
 | Inference       | llama-cpp           |
 
+## Usage
+
+To install the dependencies run:
+
+```bash
+poetry install
+```
+
+To setup the local vector database create the docker container with:
+
+```bash
+docker-compose up -d
+```
+
+Then create the database tables with:
+
+```bash
+poetry run python db.py
+```
+
+To run the example:
+
+```bash
+poetry run python example.py
+```
+
+## Performance
+
+The pipeline performance can be improved by using either Apple Silicon or a
+Nvidia GPU to drive the embedding and language model inference. This will fallback
+to CPU if no other options are available but the addition of dedicated hardware
+will improve the performance.
+
+**Apple Silicon**
+
+```bash
+poetry install --with apple
+```
+
+**Nvidia GPU**
+
+```bash
+poetry install --with nvidia
+poetry run pip install flash-attn --no-build-isolation
+```
+
 License
 -------
 

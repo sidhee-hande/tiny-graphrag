@@ -21,11 +21,15 @@ pgvector = "^0.3.6"
 sentence-transformers = "^3.2.1"
 llama-cpp-python = "^0.3.1"
 gliner-spacy = "^0.0.10"
-thinc-apple-ops = "^1.0.0"
 cdlib = "^0.4.0"
 igraph = "^0.11.8"
 leidenalg = "^0.10.2"
 tqdm = "^4.66.6"
+
+[tool.poetry.group.apple.dependencies]
+thinc-apple-ops = "^1.0.0"
+
+[tool.poetry.group.nvidia.dependencies]
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
