@@ -1,0 +1,10 @@
+services:
+  database:
+    image: pgvector/pgvector:0.7.2-pg16
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_DB: tiny-graphrag
+    ports:
+      - 5432:5432
