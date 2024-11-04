@@ -27,12 +27,12 @@ def process_document(
     g = nx.Graph()
 
     for chunk_text, embedding in tqdm(page_chunks[:max_chunks]):
-        ents, rels = extract_rels(chunk_text)
+        extraction = extract_rels(chunk_text)
 
-        for ent in ents:
+        for ent in extraction.entities:
             g.add_node(ent[0], label=ent[1])
 
-        for rel in rels:
+        for rel in extraction.relations:
             g.add_edge(rel[0], rel[2], label=rel[1], source_chunk=chunk_text)
 
     return page_chunks, g
@@ -83,13 +83,12 @@ def store_document(
     # Initialize database and LLM
     init_db()
     SessionLocal = sessionmaker(bind=engine)
-    session = SessionLocal()
 
     llm = Llama.from_pretrained(
         repo_id=MODEL_REPO, filename=MODEL_ID, local_dir=".", verbose=False, n_ctx=4096
     )
 
-    try:
+    with SessionLocal() as session:
         # Process document
         chunks, graph = process_document(filepath, title, max_chunks)
 
@@ -151,9 +150,3 @@ def store_document(
 
         session.commit()
         return doc.id, graph_path
-
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
