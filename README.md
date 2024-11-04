@@ -145,7 +145,7 @@ result = query_engine.global_search(
 
 # Naive RAG
 result = query_engine.naive_search(
-    query="Who is the second child of Barack Obama?"
+    query="What efforts did Barack Obama due to combat climate change?"
 )
 ```
 

@@ -110,7 +110,7 @@ class Summary(Base):
             embedding,
             postgresql_using="hnsw",
             postgresql_with={"m": 16, "ef_construction": 64},
-            postgresql_ops={"embedding": "vector_l2_ops"},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
         Index(
             "ix_summaries_content_fts",
@@ -145,7 +145,7 @@ class Community(Base):
             embedding,
             postgresql_using="hnsw",
             postgresql_with={"m": 16, "ef_construction": 64},
-            postgresql_ops={"embedding": "vector_l2_ops"},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
     )
 
