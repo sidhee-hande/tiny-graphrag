@@ -17,8 +17,8 @@ locally.
 | Vector Database  | [pgvector](https://github.com/pgvector/pgvector) |
 | Embedding Model  | [sentence-transformers](https://github.com/UKPLab/sentence-transformers) |
 | Language Model   | [meta-llama/Llama-3.2-3B](https://huggingface.co/meta-llama/Meta-Llama-3.2-3B) |
-| Entity Extractor | [gliner](https://github.com/urchade/GLiNER)     |
-| Relation Extract | [glirel](https://github.com/jackboyla/GLiREL)   |
+| Entity Extractor | [GLiNER](https://github.com/urchade/GLiNER)     |
+| Relation Extract | [GLiREL](https://github.com/jackboyla/GLiREL)   |
 | Graph Database   | [networkx](https://github.com/networkx/networkx) |
 | Inference        | [llama-cpp](https://github.com/abetlen/llama-cpp-python) |
 
@@ -141,6 +141,64 @@ result = query_engine.naive_search(
     query="Who is the second child of Barack Obama?"
 )
 ```
+
+## Custom Entities and Relations
+
+
+You can customize the entity types and relation types when storing documents. Here's an example using geographic entities:
+
+```python
+# Define custom entity types
+geography_entity_types = [
+    "City",
+    "Country",
+    "Landmark",
+    "River"
+]
+
+# Define custom relation types with constraints
+geography_relation_types = {
+    "capital of": {
+        "allowed_head": ["City"],
+        "allowed_tail": ["Country"]
+    },
+    "flows through": {
+        "allowed_head": ["River"],
+        "allowed_tail": ["City", "Country"]
+    },
+    "located in": {
+        "allowed_head": ["City", "Landmark"],
+        "allowed_tail": ["Country"]
+    }
+}
+
+# Store document with custom types
+doc_id, graph_path = store_document(
+    filepath="data/geography.txt",
+    title="World Geography",
+    engine=engine,
+    entity_types=geography_entity_types,
+    relation_types=list(geography_relation_types.keys())
+)
+```
+
+The constraints ensure that relationships make semantic sense, e.g., only cities can be capitals of countries.
+
+## Modules
+
+* `main.py` - CLI entry point and command handlers
+* `build.py` - Core document processing pipeline for constructing knowledge graphs from text
+* `query.py` - Query processing and response generation
+* `chunking.py` - Text segmentation and preprocessing utilities
+* `communities.py` - Graph community segmentation
+* `config.py` - Configuration settings and environment variables
+* `db.py` - Database connection and vector store management
+* `entity_types.py` - Entity type definitions and classification
+* `rel_types.py` - Relationship type definitions between entities
+* `extract.py` - Named entity recognition and relation extraction
+* `prompts.py` - LLM prompt templates
+* `search.py` - Vector similarity search and ranking algorithms
+* `visualize.py` - Graph and community visualization
 
 License
 -------
