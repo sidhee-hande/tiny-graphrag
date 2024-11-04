@@ -23,7 +23,7 @@ def nlp_model(threshold: float, device: str = DEVICE):
         "threshold": threshold,
         "map_location": device,
     }
-    spacy.require_gpu()
+    spacy.require_gpu() # type: ignore
 
     nlp = spacy.blank("en")
     nlp.add_pipe("gliner_spacy", config=custom_spacy_config)
@@ -31,6 +31,9 @@ def nlp_model(threshold: float, device: str = DEVICE):
     return nlp
 
 def extract_rels(text: str, labels = DEFAULT_RELS_LIST, threshold: float = 0.75) -> ExtractionResult:
+    """
+    Extract entities and relations from text using GLiNER and GLiREL.
+    """
     nlp = nlp_model(threshold)
     docs = list(nlp.pipe([(text, {"glirel_labels": labels})], as_tuples=True))
     relations = docs[0][0]._.relations

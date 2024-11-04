@@ -3,6 +3,8 @@ import networkx as nx
 from llama_cpp import Llama
 from sqlalchemy.orm import sessionmaker
 from tqdm import tqdm
+from dataclasses import dataclass, field
+from typing import Set, List, Tuple
 
 from tiny_graphrag.config import MODEL_REPO, MODEL_ID
 from tiny_graphrag.db import engine
@@ -16,8 +18,15 @@ from tiny_graphrag.prompts import (
 from tiny_graphrag.db import Community
 
 
+@dataclass
+class RelevantData:
+    entities: Set[str] = field(default_factory=set)
+    relationships: List[Tuple[str, str, str]] = field(default_factory=list)
+    text_chunks: Set[str] = field(default_factory=set)
+
+
 class QueryEngine:
-    def __init__(self):
+    def __init__(self) -> None:
         self.llm = Llama.from_pretrained(
             repo_id=MODEL_REPO,
             filename=MODEL_ID,
@@ -41,25 +50,25 @@ class QueryEngine:
             messages=[{"role": "user", "content": LOCAL_SEARCH.format(query=query)}],
             temperature=0.1,
         )
-        query_entities = query_response["choices"][0]["message"]["content"].split("\n")
+        query_entities = query_response["choices"][0]["message"]["content"].split("\n")  # type: ignore
         query_entities = [e.strip() for e in query_entities]
 
-        # Find relevant information
-        relevant_data = {"entities": set(), "relationships": [], "text_chunks": set()}
+        # Replace dictionary with dataclass
+        relevant_data = RelevantData()
 
         for query_entity in query_entities:
             for node in g.nodes():
                 if query_entity.lower() in str(node).lower():
-                    relevant_data["entities"].add(node)
+                    relevant_data.entities.add(node)
 
                     for neighbor in g.neighbors(node):
-                        relevant_data["entities"].add(neighbor)
+                        relevant_data.entities.add(neighbor)
                         edge_data = g.get_edge_data(node, neighbor)
                         if edge_data:
                             rel = (node, edge_data.get("label", ""), neighbor)
-                            relevant_data["relationships"].append(rel)
+                            relevant_data.relationships.append(rel)
                             if "source_chunk" in edge_data:
-                                relevant_data["text_chunks"].add(
+                                relevant_data.text_chunks.add(
                                     edge_data["source_chunk"]
                                 )
 
@@ -76,7 +85,7 @@ class QueryEngine:
             temperature=0.3,
         )
 
-        return response["choices"][0]["message"]["content"]
+        return response["choices"][0]["message"]["content"]  # type: ignore
 
     def global_search(self, query: str, doc_id: int, limit: int = 5) -> str:
         """Perform global search using community summaries and vector database"""
@@ -106,8 +115,8 @@ class QueryEngine:
                     ],
                     temperature=0.7,
                 )
-                answer = response["choices"][0]["message"]["content"]
-                if "No relevant information found" not in answer:
+                answer = response["choices"][0]["message"]["content"]  # type: ignore
+                if answer and "No relevant information found" not in answer:
                     intermediate_answers.append(answer)
 
             # Reduce phase - combine community answers
@@ -126,20 +135,20 @@ class QueryEngine:
                 temperature=0.7,
             )
 
-            return response["choices"][0]["message"]["content"]
+            return response["choices"][0]["message"]["content"]  # type: ignore
 
         finally:
             session.close()
 
-    def _build_context(self, relevant_data: dict) -> str:
+    def _build_context(self, relevant_data: RelevantData) -> str:
         return f"""
-        Relevant Entities: {', '.join(str(e) for e in relevant_data['entities'])}
+        Relevant Entities: {', '.join(str(e) for e in relevant_data.entities)}
         
         Relationships:
-        {'\n'.join(f'{s} {r} {t}' for s, r, t in relevant_data['relationships'])}
+        {'\n'.join(f'{s} {r} {t}' for s, r, t in relevant_data.relationships)}
         
         Supporting Text:
-        {'\n'.join(relevant_data['text_chunks'])}
+        {'\n'.join(relevant_data.text_chunks)}
         """
 
     def naive_search(self, query: str, limit: int = 5) -> str:
@@ -164,19 +173,4 @@ class QueryEngine:
             temperature=0.3,
         )
 
-        return response["choices"][0]["message"]["content"]
-
-
-if __name__ == "__main__":
-    engine = QueryEngine()
-
-    # Example queries
-    local_result = engine.local_search(
-        "What did Barack Obama study at Columbia University?", "graphs/1_graph.pkl"
-    )
-    print("\nLocal Search Result:", local_result)
-
-    global_result = engine.global_search(
-        "What were Obama's major achievements as president?", doc_id=1
-    )
-    print("\nGlobal Search Result:", global_result)
+        return response["choices"][0]["message"]["content"]  # type: ignore

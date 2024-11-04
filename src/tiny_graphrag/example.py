@@ -1,12 +1,13 @@
 import argparse
 from pathlib import Path
 from termcolor import colored
+from argparse import Namespace
 
 from tiny_graphrag.build import store_document
 from tiny_graphrag.query import QueryEngine
 
 
-def build_mode(args):
+def build_mode(args: Namespace) -> None:
     """Handle document processing and storage"""
     print(f"Processing document: {args.input}")
     doc_id, graph_path = store_document(
@@ -16,7 +17,7 @@ def build_mode(args):
     print(colored(f"Graph saved to: {graph_path}", "green"))
 
 
-def query_mode(args):
+def query_mode(args: Namespace) -> None:
     """Handle querying the stored document"""
     query_engine = QueryEngine()
 
@@ -35,7 +36,7 @@ def query_mode(args):
         print("\nGlobal Search Result:", result)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Tiny GraphRAG CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 

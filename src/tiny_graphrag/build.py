@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Any
 import pickle
 import networkx as nx
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +16,8 @@ from tiny_graphrag.config import MODEL_REPO, MODEL_ID
 
 
 def process_document(
-    filepath: str, title: str = None, max_chunks: int = -1
-) -> Tuple[List[Tuple[str, any]], nx.Graph]:
+    filepath: str, title: Optional[str] = None, max_chunks: int = -1
+) -> Tuple[List[Tuple[str, Any]], nx.Graph]:
     """Process a document and return chunks and graph"""
     # Read and chunk document
     page_text = open(filepath).read()
@@ -38,14 +38,19 @@ def process_document(
     return page_chunks, g
 
 
-def generate_community_summary(llm, community, max_triples=30, temperature=0.2):
+def generate_community_summary(
+    llm: Llama, 
+    community: List[Tuple[str, str, str, str]], 
+    max_triples: int = 30, 
+    temperature: float = 0.2
+) -> str:
     """Generate a summary for a community, chunking if needed"""
     # Chunk the community into smaller pieces if too large
     chunks = [
         community[i : i + max_triples] for i in range(0, len(community), max_triples)
     ]
 
-    summaries = []
+    summaries: List[str] = []
     for chunk in chunks:
         response = llm.create_chat_completion(
             messages=[
@@ -56,7 +61,7 @@ def generate_community_summary(llm, community, max_triples=30, temperature=0.2):
             ],
             temperature=temperature,
         )
-        summaries.append(response["choices"][0]["message"]["content"])
+        summaries.append(response["choices"][0]["message"]["content"])  # type: ignore
 
     # If we had multiple chunks, combine them
     if len(summaries) > 1:
@@ -71,14 +76,17 @@ def generate_community_summary(llm, community, max_triples=30, temperature=0.2):
             ],
             temperature=temperature,
         )
-        return response["choices"][0]["message"]["content"]
+        return response["choices"][0]["message"]["content"]  # type: ignore
 
     return summaries[0]
 
 
 def store_document(
-    filepath: str, title: str = None, max_chunks: int = -1, temperature: float = 0.2
-):
+    filepath: str, 
+    title: Optional[str] = None, 
+    max_chunks: int = -1, 
+    temperature: float = 0.2
+) -> Tuple[int, str]:
     """Store document in database and save graph"""
     # Initialize database and LLM
     init_db()

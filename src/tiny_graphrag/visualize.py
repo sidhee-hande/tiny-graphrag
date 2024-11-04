@@ -2,8 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 from pathlib import Path
-from typing import List, Union, Set
-
+from typing import List, Union, Set, Tuple
+from itertools import chain
 
 def visualize(
     graph: nx.Graph,
@@ -48,7 +48,7 @@ def visualize(
 
 def visualize_communities(
     graph: nx.Graph,
-    communities: List[Set[str]],
+    communities: List[List[Tuple[str, str, str, str]]],
     output_path: Union[str, Path] = "graph_communities.png",
     figsize: tuple[int, int] = (10, 10),
 ) -> None:
@@ -78,8 +78,7 @@ def visualize_communities(
     for idx, nodes in enumerate(communities):
         color = colors[idx % len(colors)]
         # Turn the triples into a list of nodes
-        node_list = [[triple[0], triple[2]] for triple in nodes]
-        node_list = [node for sublist in node_list for node in sublist]
+        node_list = list(chain.from_iterable([[triple[0], triple[2]] for triple in nodes]))
 
         nx.draw_networkx_nodes(
             graph,
