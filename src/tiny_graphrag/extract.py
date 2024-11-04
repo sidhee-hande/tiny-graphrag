@@ -1,21 +1,26 @@
-import spacy
-import glirel  # noqa: F401 Import time side effect
-from functools import cache
 from dataclasses import dataclass
+from functools import cache
 from typing import List, Tuple
 
-from tiny_graphrag.rel_types import DEFAULT_RELS_LIST
-from tiny_graphrag.entity_types import MIN_ENTITY_TYPES
+import glirel  # noqa: F401 Import time side effect
+import spacy
+
 from tiny_graphrag.config import DEVICE
 
 
 @dataclass
 class ExtractionResult:
+    """Represents the result of entity and relation extraction from text.
+
+    Contains lists of extracted entities and their relationships.
+    """
     entities: List[Tuple[str, str]]  # (text, label)
     relations: List[Tuple[str, str, str]]  # (head_text, label, tail_text)
 
+
 @cache
-def nlp_model(threshold: float, entity_types: List[str], device: str = DEVICE):
+def nlp_model(threshold: float, entity_types: tuple[str], device: str = DEVICE):
+    """Instantiate a spacy model with GLiNER and GLiREL components."""
     custom_spacy_config = {
         "gliner_model": "urchade/gliner_mediumv2.1",
         "chunk_size": 250,
@@ -33,12 +38,13 @@ def nlp_model(threshold: float, entity_types: List[str], device: str = DEVICE):
 
 
 def extract_rels(
-    text: str, entity_types=MIN_ENTITY_TYPES, relation_types=DEFAULT_RELS_LIST, threshold: float = 0.75
+    text: str,
+    entity_types: List[str],
+    relation_types: List[str],
+    threshold: float = 0.75,
 ) -> ExtractionResult:
-    """
-    Extract entities and relations from text using GLiNER and GLiREL.
-    """
-    nlp = nlp_model(threshold, entity_types)
+    """Extract entities and relations from text using GLiNER and GLiREL."""
+    nlp = nlp_model(threshold, tuple(entity_types))
     docs = list(nlp.pipe([(text, {"glirel_labels": relation_types})], as_tuples=True))
     relations = docs[0][0]._.relations
 

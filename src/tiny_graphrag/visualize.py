@@ -1,9 +1,10 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib import colors as mcolors
-from pathlib import Path
-from typing import List, Union, Tuple
 from itertools import chain
+from pathlib import Path
+from typing import List, Tuple, Union
+
+import matplotlib.pyplot as plt
+import networkx as nx
+from matplotlib import colors as mcolors
 
 
 def visualize(
@@ -14,8 +15,7 @@ def visualize(
     node_color: str = "#1f78b4",
     font_size: int = 10,
 ) -> None:
-    """
-    Visualize a networkx graph and save it as a PNG file.
+    """Visualize a networkx graph and save it as a PNG file.
 
     Args:
         graph: A networkx graph object to visualize
@@ -53,8 +53,7 @@ def visualize_communities(
     output_path: Union[str, Path] = "graph_communities.png",
     figsize: tuple[int, int] = (10, 10),
 ) -> None:
-    """
-    Visualize a networkx graph with communities in different colors.
+    """Visualize a networkx graph with communities in different colors.
 
     Args:
         graph: A networkx graph object to visualize

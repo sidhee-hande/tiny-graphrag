@@ -1,19 +1,22 @@
+from dataclasses import dataclass
+from typing import Dict, List, Tuple
+
 import networkx as nx
 from cdlib import algorithms
-from typing import List, Tuple, Dict
-from dataclasses import dataclass
 
 
 @dataclass
 class CommunityResult:
+    """Represents the result of community detection in a graph.
+
+    Contains the communities found and a mapping of nodes to their community IDs.
+    """
     communities: List[List[Tuple[str, str, str, str]]]
     node_community_map: Dict[str, int]
 
 
 def build_communities(g: nx.Graph) -> CommunityResult:
-    """
-    Build communities from a graph.
-    """
+    """Build communities from a graph."""
     communities = []
     node_community_map = {}
 

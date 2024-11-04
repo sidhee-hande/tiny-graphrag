@@ -1,31 +1,37 @@
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Column,
+    DateTime,
+    ForeignKey,
+    Index,
     Integer,
     String,
     Text,
-    ForeignKey,
-    DateTime,
     create_engine,
-    Index,
     text,
 )
-from sqlalchemy.orm import relationship, DeclarativeBase  # type: ignore
-from sqlalchemy.sql import func
-from pgvector.sqlalchemy import Vector
-from sqlalchemy.orm import mapped_column  # type: ignore
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import (  # type: ignore
+    DeclarativeBase,
+    mapped_column,
+    relationship,
+)
+from sqlalchemy.sql import func
 
 from tiny_graphrag.config import DB_URI
 
 
 class Base(DeclarativeBase):  # type: ignore
+    """Base class for all SQLAlchemy ORM models in the application."""
     pass
 
 
-engine = create_engine(DB_URI)
-
 
 class Document(Base):
+    """Represents a document in the database.
+
+    Stores the original document content and metadata.
+    """
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True)
@@ -44,6 +50,10 @@ class Document(Base):
 
 
 class DocumentChunk(Base):
+    """Represents a chunk of a document in the database.
+
+    Stores smaller segments of documents with their embeddings for efficient search.
+    """
     __tablename__ = "document_chunks"
 
     id = Column(Integer, primary_key=True)
@@ -64,7 +74,7 @@ class DocumentChunk(Base):
             embedding,
             postgresql_using="hnsw",
             postgresql_with={"m": 16, "ef_construction": 64},
-            postgresql_ops={"embedding": "vector_l2_ops"},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
         Index(
             "ix_document_chunks_content_fts",
@@ -78,6 +88,10 @@ class DocumentChunk(Base):
 
 
 class Summary(Base):
+    """Represents a document summary in the database.
+
+    Stores generated summaries of documents.
+    """
     __tablename__ = "summaries"
 
     id = Column(Integer, primary_key=True)
@@ -104,6 +118,10 @@ class Summary(Base):
 
 
 class Community(Base):
+    """Represents a community of related documents in the database.
+
+    Stores information about document clusters and their relationships.
+    """
     __tablename__ = "communities"
 
     id = Column(Integer, primary_key=True)
@@ -129,20 +147,26 @@ class Community(Base):
 
 
 # Database connection setup
-def init_db() -> Engine:
-    # Enable pgvector extension if it's not already enabled
-    print("Creating database tables...")
+def init_db(db_uri: str) -> Engine:
+    """Initialize the database connection and create necessary tables.
 
+    Returns:
+        Engine: SQLAlchemy engine instance connected to the database.
+    """
+    engine = create_engine(db_uri)
+
+    # Enable pgvector extension if it's not already enabled
     print("Enabling pgvector extension...")
     with engine.connect() as conn:
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.commit()
 
     print("Creating tables...")
     Base.metadata.create_all(engine)
 
     print("Creating indexes...")
     # Create all of the indexes for each model
-    for model in [Document, DocumentChunk, Summary]:
+    for model in [Document, DocumentChunk, Summary, Community]:
         for index in getattr(model, "__table_args__", []):
             if isinstance(index, Index):
                 try:
@@ -155,4 +179,4 @@ def init_db() -> Engine:
 
 
 if __name__ == "__main__":
-    init_db()
+    init_db(DB_URI)

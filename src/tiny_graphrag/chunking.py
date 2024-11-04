@@ -1,18 +1,17 @@
 from typing import List, Tuple, cast
+
 import numpy as np
 import numpy.typing as npt
 from sentence_transformers import SentenceTransformer
 
 # Initialize the model
-# model = SentenceTransformer("all-MiniLM-L6-v2")
 model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
 
 def chunk_document(
     text: str, chunk_size: int = 200, overlap: int = 50
 ) -> List[Tuple[str, npt.NDArray[np.float32]]]:
-    """
-    Split a document into overlapping chunks and generate embeddings for each chunk.
+    """Split a document into overlapping chunks and generate embeddings for each chunk.
 
     Args:
         text: The input document text

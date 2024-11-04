@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-graphrag = "tiny_graphrag.example:main"
+graphrag = "tiny_graphrag.main:main"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
@@ -69,4 +69,28 @@ disallow_untyped_calls = "true"
 disallow_any_generics = "true"
 follow_imports = "silent"
 plugins = "sqlmypy"
-#exclude = ""
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "N",  # PEP8 naming convetions
+    "D"  # pydocstyle
+]
+ignore = [
+    "D104",  # missing docstring
+    "D100",  # missing docstring in public class
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"prompts.py" = ["E501"]

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/logo.png" alt="Tiny GraphRAG Logo" width="256"/>
+  <img src=".github/logo.png" alt="Tiny GraphRAG Logo" width="512"/>
 </p>
 
 # Tiny GraphRAG
@@ -9,7 +9,7 @@ models that run locally. This implementation is designed to be easy to be
 easily understandable, hackable and forkable and not dependent on any
 framework.
 
-Notably we do not use OpenAI or any commercial LLM providers and can be run
+Notably it does not use OpenAI or any commercial LLM providers and can be run
 locally.
 
 | Component         | Implementation                                    |
@@ -39,24 +39,36 @@ docker-compose up -d
 Then create the database tables with:
 
 ```shell
-poetry run python db.py
+poetry run graphrag init
 ```
 
 To build the graph and embeddings for a document run:
 
 ```shell
-poetry run python example build data/Barack_Obama.txt
+poetry run graphrag build data/Barack_Obama.txt
 ```
 
-To query use either the `local` or `global` mode and provide the path to the graph
-file and the query:
+Then we can query the database with the following modes:
+
+- **Local Search**: Uses the graph structure to find relevant entities and their relationships, providing context-aware results based on the document's knowledge graph.
+- **Global Search**: Analyzes document communities and their summaries to provide high-level insights and thematic understanding.
+- **Naive RAG**: Combines vector similarity and keyword matching using Reciprocal Rank Fusion to find relevant text chunks directly.
+
+Choose the search mode based on your needs:
+
+- Use `local` for specific factual queries where relationships between entities matter
+- Use `global` for thematic questions or high-level document understanding
+- Use `naive` for simple queries where direct text chunk matching is sufficient
 
 ```shell
 # Local search
-poetry run python example.py query local --graph graphs/21_graph.pkl "What did Barack Obama study at Columbia University?"
+poetry run graphrag query local --graph graphs/21_graph.pkl "What did Barack Obama study at Columbia University?"
 
 # Global search
-poetry run python example.py query global --graph graphs/21_graph.pkl  --doc-id 21 "What are the main themes of this document?"
+poetry run graphrag query global --graph graphs/21_graph.pkl  --doc-id 21 "What are the main themes of this document?"
+
+# Naive RAG
+poetry run graphrag query naive "Who is the second child of Barack Obama?"
 ```
 
 ## Performance
@@ -90,15 +102,20 @@ poetry run pip install flash-attn --no-build-isolation
 You can also this library directly.
 
 ```python
-from tiny_graphrag import store_document, QueryEngine
+from tiny_graphrag import store_document, QueryEngine, init_db
+
+# Initialize the database first
+engine = init_db("postgresql://admin:admin@localhost:5432/tiny-graphrag")
 
 # Process and store a document
 doc_id, graph_path = store_document(
     filepath="data/Barack_Obama.txt",
     title="Barack Obama Wikipedia",
+    engine=engine
 )
 
-query_engine = QueryEngine()
+# Create query engine with the database connection
+query_engine = QueryEngine(engine)
 
 result = query_engine.local_search(
     query="What did Barack Obama study at Columbia University?",

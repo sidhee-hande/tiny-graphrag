@@ -1,22 +1,23 @@
 import pickle
+from dataclasses import dataclass, field
+from typing import List, Set, Tuple
+
 import networkx as nx
 from llama_cpp import Llama
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from tqdm import tqdm
-from dataclasses import dataclass, field
-from typing import Set, List, Tuple
 
-from tiny_graphrag.config import MODEL_REPO, MODEL_ID
-from tiny_graphrag.db import engine
+from tiny_graphrag.config import MODEL_ID, MODEL_REPO
+from tiny_graphrag.db import Community
 from tiny_graphrag.prompts import (
+    GLOBAL_SEARCH_COMBINE,
+    GLOBAL_SEARCH_COMMUNITY,
     LOCAL_SEARCH,
     LOCAL_SEARCH_CONTEXT,
     LOCAL_SEARCH_RESPONSE,
-    GLOBAL_SEARCH_COMMUNITY,
-    GLOBAL_SEARCH_COMBINE,
     NAIVE_SEARCH_RESPONSE,
 )
-from tiny_graphrag.db import Community
 
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_LIMIT = 5
@@ -35,7 +36,7 @@ class RelevantData:
 class QueryEngine:
     """Engine for performing various types of semantic searches."""
 
-    def __init__(self) -> None:
+    def __init__(self, engine: Engine) -> None:
         """Initialize QueryEngine with LLM model and database session."""
         self.llm = Llama.from_pretrained(
             repo_id=MODEL_REPO,
@@ -45,6 +46,7 @@ class QueryEngine:
             n_ctx=DEFAULT_CTX_LENGTH,
         )
         self.SessionLocal = sessionmaker(bind=engine)
+        self.engine = engine
 
     def load_graph(self, graph_path: str) -> nx.Graph:
         """Load graph from pickle file.
@@ -61,8 +63,8 @@ class QueryEngine:
         try:
             with open(graph_path, "rb") as f:
                 return pickle.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Graph file not found at: {graph_path}")
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"Graph file not found at: {graph_path}") from err
 
     def local_search(self, query: str, graph_path: str) -> str:
         """Perform local search using graph structure.
@@ -120,7 +122,7 @@ class QueryEngine:
                     relevant_data.text_chunks.add(edge_data["source_chunk"])
 
     def global_search(self, query: str, doc_id: int, limit: int = 5) -> str:
-        """Perform global search using community summaries and vector database"""
+        """Perform global search using community summaries and vector database."""
         # Create session
         session = self.SessionLocal()
         try:
@@ -168,11 +170,11 @@ class QueryEngine:
         )
 
     def naive_search(self, query: str, limit: int = 5) -> str:
-        """Perform naive RAG search using hybrid vector + keyword search"""
+        """Perform naive RAG search using hybrid vector + keyword search."""
         from tiny_graphrag.search import hybrid_search
 
         # Get relevant chunks using hybrid search
-        search_results = hybrid_search(query, limit=limit)
+        search_results = hybrid_search(query, limit=limit, engine=self.engine)
 
         # Build context from search results
         context = "\n\n".join([result.content for result in search_results])

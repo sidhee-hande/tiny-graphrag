@@ -24,7 +24,7 @@ Combine the provided answers into a single coherent response that fully addresse
 """
 
 NAIVE_SEARCH_RESPONSE = """
-Answer the query using only the provided context. Be specific and concise. If the context doesn't contain relevant information, say so.
+Answer the query using only the provided context. Be specific and concise. If the context doesn't contain relevant information, say so and do not make up an answer.
 """
 
 LOCAL_SEARCH_CONTEXT = """

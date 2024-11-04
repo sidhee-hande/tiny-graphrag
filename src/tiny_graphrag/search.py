@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from sqlalchemy import text
-from sqlalchemy.orm import sessionmaker
-from sentence_transformers import SentenceTransformer
 from typing import List
-from db import engine
+
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import text
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import sessionmaker
 
 
 @dataclass
@@ -15,14 +16,12 @@ class SearchResult:
     score: float
 
 
-# model = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1')
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
-
-def hybrid_search(query: str, limit: int = 5, k: int = 60) -> List[SearchResult]:
-    """
-    Perform hybrid search combining semantic and keyword search.
-    """
+def hybrid_search(
+    query: str, limit: int = 5, k: int = 60, *, engine: Engine
+) -> List[SearchResult]:
+    """Perform hybrid search combining semantic and keyword search."""
     # Generate embedding for the query
     query_embedding = model.encode(
         query, show_progress_bar=False, convert_to_numpy=True
@@ -58,10 +57,10 @@ def hybrid_search(query: str, limit: int = 5, k: int = 60) -> List[SearchResult]
     )
 
     # Create a sessionmaker
-    SessionLocal = sessionmaker(bind=engine)
+    session_local = sessionmaker(bind=engine)
 
     # Use the session
-    session = SessionLocal()
+    session = session_local()
     try:
         results = session.execute(
             sql,
