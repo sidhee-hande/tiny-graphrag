@@ -39,10 +39,10 @@ def process_document(
 
 
 def generate_community_summary(
-    llm: Llama, 
-    community: List[Tuple[str, str, str, str]], 
-    max_triples: int = 30, 
-    temperature: float = 0.2
+    llm: Llama,
+    community: List[Tuple[str, str, str, str]],
+    max_triples: int = 30,
+    temperature: float = 0.2,
 ) -> str:
     """Generate a summary for a community, chunking if needed"""
     # Chunk the community into smaller pieces if too large
@@ -82,10 +82,10 @@ def generate_community_summary(
 
 
 def store_document(
-    filepath: str, 
-    title: Optional[str] = None, 
-    max_chunks: int = -1, 
-    temperature: float = 0.2
+    filepath: str,
+    title: Optional[str] = None,
+    max_chunks: int = -1,
+    temperature: float = 0.2,
 ) -> Tuple[int, str]:
     """Store document in database and save graph"""
     # Initialize database and LLM

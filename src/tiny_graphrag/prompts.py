@@ -26,3 +26,13 @@ Combine the provided answers into a single coherent response that fully addresse
 NAIVE_SEARCH_RESPONSE = """
 Answer the query using only the provided context. Be specific and concise. If the context doesn't contain relevant information, say so.
 """
+
+LOCAL_SEARCH_CONTEXT = """
+Relevant Entities: {entities}
+
+Relationships:
+{relationships}
+
+Supporting Text:
+{text_chunks}
+"""
