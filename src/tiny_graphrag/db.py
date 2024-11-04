@@ -23,8 +23,8 @@ from tiny_graphrag.config import DB_URI
 
 class Base(DeclarativeBase):  # type: ignore
     """Base class for all SQLAlchemy ORM models in the application."""
-    pass
 
+    pass
 
 
 class Document(Base):
@@ -32,6 +32,7 @@ class Document(Base):
 
     Stores the original document content and metadata.
     """
+
     __tablename__ = "documents"
 
     id = Column(Integer, primary_key=True)
@@ -54,6 +55,7 @@ class DocumentChunk(Base):
 
     Stores smaller segments of documents with their embeddings for efficient search.
     """
+
     __tablename__ = "document_chunks"
 
     id = Column(Integer, primary_key=True)
@@ -92,6 +94,7 @@ class Summary(Base):
 
     Stores generated summaries of documents.
     """
+
     __tablename__ = "summaries"
 
     id = Column(Integer, primary_key=True)
@@ -122,6 +125,7 @@ class Community(Base):
 
     Stores information about document clusters and their relationships.
     """
+
     __tablename__ = "communities"
 
     id = Column(Integer, primary_key=True)

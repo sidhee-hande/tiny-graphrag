@@ -20,8 +20,8 @@ from tiny_graphrag.prompts import (
 )
 
 DEFAULT_TEMPERATURE = 0.3
-DEFAULT_LIMIT = 5
-DEFAULT_CTX_LENGTH = 2048
+DEFAULT_LIMIT = 10
+DEFAULT_CTX_LENGTH = 8192
 
 
 @dataclass
@@ -178,6 +178,8 @@ class QueryEngine:
 
         # Build context from search results
         context = "\n\n".join([result.content for result in search_results])
+
+        print(f"Context:\n{context}")
 
         # Generate response using LLM
         return self._generate_llm_response(

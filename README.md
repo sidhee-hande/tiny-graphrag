@@ -55,6 +55,13 @@ To build the graph and embeddings for a document run:
 poetry run graphrag build data/Barack_Obama.txt
 ```
 
+This will run for some time and when complete with the metadata.
+
+```shell
+Success! Document stored with ID: 1
+Graph saved to: graphs/1_graph.pkl
+```
+
 Then we can query the database with the following modes:
 
 - **Local Search**: Uses the graph structure to find relevant entities and their relationships, providing context-aware results based on the document's knowledge graph.
@@ -69,13 +76,13 @@ Choose the search mode based on your needs:
 
 ```shell
 # Local search
-poetry run graphrag query local --graph graphs/21_graph.pkl "What did Barack Obama study at Columbia University?"
+poetry run graphrag query local --graph graphs/1_graph.pkl "What did Barack Obama study at Columbia University?"
 
 # Global search
-poetry run graphrag query global --graph graphs/21_graph.pkl  --doc-id 21 "What are the main themes of this document?"
+poetry run graphrag query global --graph graphs/1_graph.pkl  --doc-id 1 "What are the main themes of this document?"
 
 # Naive RAG
-poetry run graphrag query naive "Who is the second child of Barack Obama?"
+poetry run graphrag query naive "What efforts did Barack Obama due to combat climate change?"
 ```
 
 ## Performance

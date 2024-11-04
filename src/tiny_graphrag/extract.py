@@ -14,6 +14,7 @@ class ExtractionResult:
 
     Contains lists of extracted entities and their relationships.
     """
+
     entities: List[Tuple[str, str]]  # (text, label)
     relations: List[Tuple[str, str, str]]  # (head_text, label, tail_text)
 

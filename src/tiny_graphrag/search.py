@@ -18,6 +18,7 @@ class SearchResult:
 
 model = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
 
+
 def hybrid_search(
     query: str, limit: int = 5, k: int = 60, *, engine: Engine
 ) -> List[SearchResult]:

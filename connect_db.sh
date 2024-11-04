@@ -2,4 +2,4 @@ PGPASSWORD=admin psql \
   -h localhost \
   -p 5432 \
   -U admin \
-  -d tinyrog
+  -d tiny-graphrag

@@ -11,6 +11,7 @@ class CommunityResult:
 
     Contains the communities found and a mapping of nodes to their community IDs.
     """
+
     communities: List[List[Tuple[str, str, str, str]]]
     node_community_map: Dict[str, int]
 
