@@ -15,7 +15,7 @@ def build_mode(args: Namespace) -> None:
     engine = init_db(DB_URI)
     print(f"Processing document: {args.input}")
     doc_id, graph_path = store_document(
-        args.input, title=Path(args.input).stem, max_chunks=25, engine=engine
+        args.input, title=Path(args.input).stem, engine=engine
     )
     print(colored(f"Success! Document stored with ID: {doc_id}", "green"))
     print(colored(f"Graph saved to: {graph_path}", "green"))
