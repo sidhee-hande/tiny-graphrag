@@ -24,13 +24,20 @@ locally.
 
 ## Usage
 
+First clone the repository:
+
+```shell
+git clone https://github.com/sdiehl/tiny-graphrag.git
+cd tiny-graphrag
+```
+
 To install the dependencies run:
 
-```bash
+```shell
 poetry install
 ```
 
-To setup the local vector database create the docker container with:
+To setup the local Postgres vector database in a docker container run:
 
 ```shell
 docker-compose up -d
@@ -117,14 +124,21 @@ doc_id, graph_path = store_document(
 # Create query engine with the database connection
 query_engine = QueryEngine(engine)
 
+# Local search
 result = query_engine.local_search(
     query="What did Barack Obama study at Columbia University?",
     graph_path=graph_path
 )
 
+# Global search
 result = query_engine.global_search(
     query="What are the main themes of this document?",
     doc_id=doc_id
+)
+
+# Naive RAG
+result = query_engine.naive_search(
+    query="Who is the second child of Barack Obama?"
 )
 ```
 
