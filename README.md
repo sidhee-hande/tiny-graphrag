@@ -178,7 +178,7 @@ doc_id, graph_path = store_document(
     title="World Geography",
     engine=engine,
     entity_types=geography_entity_types,
-    relation_types=list(geography_relation_types.keys())
+    relation_types=geography_relation_types,
 )
 ```
 

@@ -32,10 +32,20 @@ leidenalg = "^0.10.2"
 tqdm = "^4.66.6"
 termcolor = "^2.5.0"
 
+[tool.poetry.group.apple]
+optional = true
+
+[tool.poetry.group.nvidia]
+optional = true
+
 [tool.poetry.group.apple.dependencies]
 thinc-apple-ops = "^1.0.0"
 
 [tool.poetry.group.nvidia.dependencies]
+thinc-gpu-ops = "^0.0.4"
+
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"
