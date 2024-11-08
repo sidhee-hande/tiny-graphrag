@@ -8,7 +8,7 @@ from neo4j import GraphDatabase
 class GraphConfig:
     """Memgraph connection configuration."""
 
-    uri: str = "bolt://memgraph:7687"
+    uri: str = "bolt://localhost:7687"
     username: str = "admin"
     password: str = "admin"
     database: str = "memgraph"
@@ -44,35 +44,26 @@ class GraphStore:
     ) -> None:
         """Store entities and relations in Memgraph."""
         with self.driver.session() as session:
-            # Create constraints if they don't exist
-            session.run(
-                "CREATE CONSTRAINT IF NOT EXISTS ON (n:Entity) ASSERT n.text IS UNIQUE"
-            )
-
             # Store entities
             for text, label in entities:
-                session.run(
-                    """
-                    MERGE (e:Entity {text: $text})
-                    SET e.label = $label, e.doc_id = $doc_id
-                """,
-                    text=text,
-                    label=label,
-                    doc_id=doc_id,
-                )
+                query = "MERGE (n:Entity {content: $content, label: $label, doc_id: $doc_id})"
+                session.run(query, {"content": text, "label": label, "doc_id": doc_id})
 
-            # Store relations
+            # Store relations with properties
             for head, rel_type, tail in relations:
+                query = """
+                    MATCH (h:Entity {content: $head}), (t:Entity {content: $tail})
+                    CREATE (h)-[:RELATES {type: $rel_type, doc_id: $doc_id, source_chunk: $source_chunk}]->(t)
+                """
                 session.run(
-                    """
-                    MATCH (h:Entity {text: $head}), (t:Entity {text: $tail})
-                    MERGE (h)-[r:RELATES {type: $rel_type, doc_id: $doc_id, source_chunk: $chunk}]->(t)
-                """,
-                    head=head,
-                    tail=tail,
-                    rel_type=rel_type,
-                    doc_id=doc_id,
-                    chunk=source_chunk,
+                    query,
+                    {
+                        "head": head,
+                        "tail": tail,
+                        "rel_type": rel_type,
+                        "doc_id": doc_id,
+                        "source_chunk": source_chunk,
+                    },
                 )
 
     def get_subgraph(self, doc_id: int) -> Dict:
@@ -85,8 +76,8 @@ class GraphStore:
                 RETURN h.text as head_text, h.label as head_label,
                        r.type as rel_type, r.source_chunk as chunk,
                        t.text as tail_text, t.label as tail_label
-            """,
-                doc_id=doc_id,
+                """,
+                {"doc_id": doc_id},
             )
             return result.data()
 

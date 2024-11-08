@@ -78,8 +78,16 @@ def process_document(
         chunks.append(DocumentChunkData(text=chunk_text, embedding=embedding))
         extraction = extract_rels(chunk_text, entity_types, relation_types)
 
+        # Add entities from both standalone entities and those in relations
         for ent in extraction.entities:
             all_mentions.append((ent[0], ent[1], chunk_text))
+        # Add entities from relations to ensure they're all captured
+        for rel in extraction.relations:
+            all_mentions.append((rel[0], "UNKNOWN", chunk_text))
+            all_mentions.append((rel[2], "UNKNOWN", chunk_text))
+
+    # Remove duplicates while preserving order
+    all_mentions = list(dict.fromkeys(tuple(m) for m in all_mentions))
 
     # Resolve entities to canonical forms
     resolved_entities = disambiguator.resolve_entities(all_mentions)
@@ -90,11 +98,16 @@ def process_document(
         extraction = extract_rels(chunk_text, entity_types, relation_types)
 
         for ent in extraction.entities:
-            canonical_form = entity_map[ent[0]]
-            g.add_node(canonical_form, label=ent[1])
-            entities.append(Entity(id=canonical_form, type=ent[1]))
+            if ent[0] in entity_map:  # Only add if entity was resolved
+                canonical_form = entity_map[ent[0]]
+                g.add_node(canonical_form, label=ent[1])
+                entities.append(Entity(id=canonical_form, type=ent[1]))
 
         for rel in extraction.relations:
+            # Skip relations where either entity wasn't resolved
+            if rel[0] not in entity_map or rel[2] not in entity_map:
+                continue
+
             head_canonical = entity_map[rel[0]]
             tail_canonical = entity_map[rel[2]]
             g.add_edge(
