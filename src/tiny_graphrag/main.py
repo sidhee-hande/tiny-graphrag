@@ -27,10 +27,10 @@ def query_mode(args: Namespace) -> None:
     query_engine = QueryEngine(engine)
 
     if args.mode == "local":
-        if not args.graph:
-            print("Error: --graph argument required for local search")
+        if not args.doc_id:
+            print("Error: --doc-id argument required for local search")
             return
-        result = query_engine.local_search(args.query, args.graph)
+        result = query_engine.local_search(args.query, args.doc_id)
         print("\nLocal Search Result:", result)
 
     elif args.mode == "global":
@@ -72,12 +72,7 @@ def main() -> None:
     )
     query_parser.add_argument("query", type=str, help="Query string")
     query_parser.add_argument(
-        "--graph",
-        type=str,
-        help="Path to graph pickle file (required for local search)",
-    )
-    query_parser.add_argument(
-        "--doc-id", type=int, help="Document ID (required for global search)"
+        "--doc-id", type=int, help="Document ID (required for local and global search)"
     )
 
     args = parser.parse_args()

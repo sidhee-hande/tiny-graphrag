@@ -1,8 +1,6 @@
-import pickle
 from dataclasses import dataclass, field
 from typing import List, Set, Tuple
 
-import networkx as nx
 from llama_cpp import Llama
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
@@ -10,6 +8,7 @@ from tqdm import tqdm
 
 from tiny_graphrag.config import MODEL_ID, MODEL_REPO
 from tiny_graphrag.db import Community
+from tiny_graphrag.graph import GraphStore
 from tiny_graphrag.prompts import (
     GLOBAL_SEARCH_COMBINE,
     GLOBAL_SEARCH_COMMUNITY,
@@ -47,44 +46,20 @@ class QueryEngine:
         )
         self.SessionLocal = sessionmaker(bind=engine)
         self.engine = engine
+        self.graph_store = GraphStore()
 
-    def load_graph(self, graph_path: str) -> nx.Graph:
-        """Load graph from pickle file.
-
-        Args:
-            graph_path: Path to the pickled graph file.
-
-        Returns:
-            NetworkX graph object.
-
-        Raises:
-            FileNotFoundError: If graph file doesn't exist.
-        """
+    def local_search(self, query: str, doc_id: int) -> str:
+        """Perform local search using graph structure."""
         try:
-            with open(graph_path, "rb") as f:
-                return pickle.load(f)
-        except FileNotFoundError as err:
-            raise FileNotFoundError(f"Graph file not found at: {graph_path}") from err
-
-    def local_search(self, query: str, graph_path: str) -> str:
-        """Perform local search using graph structure.
-
-        Args:
-            query: User query string.
-            graph_path: Path to the graph file.
-
-        Returns:
-            Generated response based on local graph search.
-        """
-        g = self.load_graph(graph_path)
-
-        # Extract entities from query
-        query_entities = self._extract_query_entities(query)
-        relevant_data = self._gather_relevant_data(g, query_entities)
-
-        # Build context and generate response
-        context = self._build_context(relevant_data)
-        return self._generate_response(query, context)
+            # Extract entities from query
+            query_entities = self._extract_query_entities(query)
+            # Get relevant data from graph store
+            relevant_data = self.graph_store.get_relevant_data(doc_id, query_entities)
+            # Build context and generate response
+            context = self._build_context(relevant_data)
+            return self._generate_response(query, context)
+        finally:
+            self.graph_store.close()
 
     def _extract_query_entities(self, query: str) -> List[str]:
         """Extract relevant entities from the query using LLM."""
@@ -92,34 +67,6 @@ class QueryEngine:
             "", LOCAL_SEARCH.format(query=query), temp=0.1
         )
         return [e.strip() for e in response.split("\n")]
-
-    def _gather_relevant_data(
-        self, graph: nx.Graph, query_entities: List[str]
-    ) -> RelevantData:
-        """Gather relevant nodes, relationships and text chunks from graph."""
-        relevant_data = RelevantData()
-
-        for query_entity in query_entities:
-            for node in graph.nodes():
-                if query_entity.lower() in str(node).lower():
-                    self._process_matching_node(node, graph, relevant_data)
-
-        return relevant_data
-
-    def _process_matching_node(
-        self, node: str, graph: nx.Graph, relevant_data: RelevantData
-    ) -> None:
-        """Process a matching node and its neighbors."""
-        relevant_data.entities.add(node)
-
-        for neighbor in graph.neighbors(node):
-            relevant_data.entities.add(neighbor)
-            edge_data = graph.get_edge_data(node, neighbor)
-            if edge_data:
-                rel = (node, edge_data.get("label", ""), neighbor)
-                relevant_data.relationships.append(rel)
-                if "source_chunk" in edge_data:
-                    relevant_data.text_chunks.add(edge_data["source_chunk"])
 
     def global_search(self, query: str, doc_id: int, limit: int = 5) -> str:
         """Perform global search using community summaries and vector database."""

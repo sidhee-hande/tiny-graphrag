@@ -8,3 +8,29 @@ services:
       POSTGRES_DB: tiny-graphrag
     ports:
       - 5432:5432
+
+  memgraph:
+    image: memgraph/memgraph-mage:1.19-memgraph-2.19
+    container_name: memgraph
+    ports:
+      - "7687:7687"
+      - "7444:7444"
+    command: ["--log-level=TRACE", "--query-execution-timeout-sec=0"]
+    volumes:
+      - mg_lib:/var/lib/memgraph
+
+  lab:
+    image: memgraph/lab:latest
+    container_name: memgraph-ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - memgraph
+    environment:
+      - QUICK_CONNECT_MG_HOST=memgraph
+      - QUICK_CONNECT_MG_PORT=7687
+      - QUICK_CONNECT_MG_USER=admin
+      - QUICK_CONNECT_MG_PASSWORD=admin
+
+volumes:
+  mg_lib:
