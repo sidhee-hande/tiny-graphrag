@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from tiny_graphrag.chunking import chunk_document
 from tiny_graphrag.db import Document, DocumentChunk
+from tiny_graphrag.dis import EntityDisambiguator
 from tiny_graphrag.entity_types import MIN_ENTITY_TYPES
 from tiny_graphrag.extract import extract_rels
 from tiny_graphrag.graph import GraphStore
@@ -62,23 +63,46 @@ def process_document(
     page_text = open(filepath).read()
     page_chunks = chunk_document(page_text)
 
+    # Initialize disambiguator
+    disambiguator = EntityDisambiguator()
+
     # Build graph and collect entities/relations
     g = nx.Graph()
     entities: List[Entity] = []
     relations: List[Relation] = []
     chunks: List[DocumentChunkData] = []
 
+    # First pass: collect all entity mentions with context
+    all_mentions = []
     for chunk_text, embedding in tqdm(page_chunks[:max_chunks]):
         chunks.append(DocumentChunkData(text=chunk_text, embedding=embedding))
         extraction = extract_rels(chunk_text, entity_types, relation_types)
 
         for ent in extraction.entities:
-            g.add_node(ent[0], label=ent[1])
-            entities.append(Entity(id=ent[0], type=ent[1]))
+            all_mentions.append((ent[0], ent[1], chunk_text))
+
+    # Resolve entities to canonical forms
+    resolved_entities = disambiguator.resolve_entities(all_mentions)
+    entity_map = {m[0]: r[0] for m, r in zip(all_mentions, resolved_entities)}
+
+    # Second pass: create graph with resolved entities
+    for chunk_text, _ in page_chunks[:max_chunks]:
+        extraction = extract_rels(chunk_text, entity_types, relation_types)
+
+        for ent in extraction.entities:
+            canonical_form = entity_map[ent[0]]
+            g.add_node(canonical_form, label=ent[1])
+            entities.append(Entity(id=canonical_form, type=ent[1]))
 
         for rel in extraction.relations:
-            g.add_edge(rel[0], rel[2], label=rel[1], source_chunk=chunk_text)
-            relations.append(Relation(head=rel[0], relation_type=rel[1], tail=rel[2]))
+            head_canonical = entity_map[rel[0]]
+            tail_canonical = entity_map[rel[2]]
+            g.add_edge(
+                head_canonical, tail_canonical, label=rel[1], source_chunk=chunk_text
+            )
+            relations.append(
+                Relation(head=head_canonical, relation_type=rel[1], tail=tail_canonical)
+            )
 
     return ProcessedDocument(chunks=chunks, entities=entities, relations=relations)
 
