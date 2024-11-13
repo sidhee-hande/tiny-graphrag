@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from neo4j import GraphDatabase
 
@@ -31,7 +31,7 @@ class GraphStore:
             ),
         )
 
-    def close(self):
+    def close(self) -> None:
         """Close the driver connection."""
         self.driver.close()
 
@@ -66,7 +66,7 @@ class GraphStore:
                     },
                 )
 
-    def get_subgraph(self, doc_id: int) -> Dict:
+    def get_subgraph(self, doc_id: int) -> List[Dict[str, Any]]:
         """Retrieve all entities and relations for a document."""
         with self.driver.session() as session:
             result = session.run(
@@ -81,7 +81,9 @@ class GraphStore:
             )
             return result.data()
 
-    def get_relevant_data(self, doc_id: int, query_entities: List[str]) -> Dict:
+    def get_relevant_data(
+        self, doc_id: int, query_entities: List[str]
+    ) -> List[Dict[str, Any]]:
         """Get relevant entities and relations for query entities."""
         with self.driver.session() as session:
             result = session.run(
@@ -92,8 +94,7 @@ class GraphStore:
                 RETURN h.text as head_text, h.label as head_label,
                        r.type as rel_type, r.source_chunk as chunk,
                        t.text as tail_text, t.label as tail_label
-            """,
-                doc_id=doc_id,
-                query=" OR ".join(query_entities),
+                """,
+                {"doc_id": doc_id, "query": " OR ".join(query_entities)},
             )
             return result.data()

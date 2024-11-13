@@ -53,8 +53,24 @@ class QueryEngine:
         try:
             # Extract entities from query
             query_entities = self._extract_query_entities(query)
-            # Get relevant data from graph store
-            relevant_data = self.graph_store.get_relevant_data(doc_id, query_entities)
+
+            # Get relevant data from graph store and convert to RelevantData
+            graph_data = self.graph_store.get_relevant_data(doc_id, query_entities)
+
+            # Initialize RelevantData object
+            relevant_data = RelevantData()
+
+            # Populate RelevantData from graph_data
+            for item in graph_data:
+                if "entity" in item:
+                    relevant_data.entities.add(item["entity"])
+                if "head" in item and "relation" in item and "tail" in item:
+                    relevant_data.relationships.append(
+                        (item["head"], item["relation"], item["tail"])
+                    )
+                if "text_chunk" in item:
+                    relevant_data.text_chunks.add(item["text_chunk"])
+
             # Build context and generate response
             context = self._build_context(relevant_data)
             return self._generate_response(query, context)

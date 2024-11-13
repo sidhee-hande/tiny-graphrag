@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
 
@@ -12,7 +13,7 @@ class EntityMention:
     text: str  # The entity text
     type: str  # Entity type
     context: str  # Surrounding text context
-    embedding: np.ndarray  # Vector embedding
+    embedding: NDArray[np.float32]  # Vector embedding
 
 
 class EntityDisambiguator:
@@ -29,12 +30,12 @@ class EntityDisambiguator:
         self.entity_clusters: Dict[str, Set[str]] = (
             {}
         )  # Maps canonical forms to variants
-        self.mention_embeddings: Dict[str, np.ndarray] = {}
+        self.mention_embeddings: Dict[str, NDArray[np.float32]] = {}
 
-    def get_context_embedding(self, mention: str, context: str) -> np.ndarray:
+    def get_context_embedding(self, mention: str, context: str) -> NDArray[np.float32]:
         """Generate embedding for entity mention with context."""
         text_to_encode = f"{mention} | {context}"
-        return self.model.encode(text_to_encode)
+        return self.model.encode(text_to_encode, convert_to_numpy=True)
 
     def are_same_entity(self, mention1: EntityMention, mention2: EntityMention) -> bool:
         """Determine if two mentions refer to the same entity."""
@@ -43,8 +44,9 @@ class EntityDisambiguator:
             return False
 
         # Compare embeddings using cosine similarity
-        similarity = np.dot(mention1.embedding, mention2.embedding) / (
-            np.linalg.norm(mention1.embedding) * np.linalg.norm(mention2.embedding)
+        similarity = float(
+            np.dot(mention1.embedding, mention2.embedding)
+            / (np.linalg.norm(mention1.embedding) * np.linalg.norm(mention2.embedding))
         )
         return similarity >= self.similarity_threshold
 
