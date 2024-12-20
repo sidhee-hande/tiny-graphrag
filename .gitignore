@@ -159,3 +159,4 @@ cython_debug/
 *.png
 *.pkl
 *.gguf
+/data

@@ -58,3 +58,32 @@ FULL_ENTITY_TYPES = [
     "Medical procedure",
     "Celestial body",
 ]
+
+CUSTOM_ENTITY_TYPES = [
+    "ProjectName",
+    "Party",
+    "Role",
+    "Person",
+    "ContractDate",
+    "Sector",
+    "ContractName",
+    "ContractType",
+    "Location",
+    "Country"
+]
+
+MARKED_ENTITIES = [
+    "Project",
+    "Sector",
+    "Subsector",
+    "ContractName",
+    "ContractDate",
+    "Country",
+    "Location",
+    "Party",
+    "Role",
+    "Person",
+    "ContractType"
+]
+
+NEW_ENTITIES  = FULL_ENTITY_TYPES + CUSTOM_ENTITY_TYPES

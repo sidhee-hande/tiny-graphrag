@@ -12,11 +12,11 @@ from tiny_graphrag.chunking import chunk_document, model
 from tiny_graphrag.communities import build_communities
 from tiny_graphrag.config import MODEL_ID, MODEL_REPO
 from tiny_graphrag.db import Community, Document, DocumentChunk
-from tiny_graphrag.entity_types import MIN_ENTITY_TYPES
+from tiny_graphrag.entity_types import MIN_ENTITY_TYPES, NEW_ENTITIES
 from tiny_graphrag.extract import extract_rels
 from tiny_graphrag.prompts import COMMUNITY_COMBINE, COMMUNITY_SUMMARY
-from tiny_graphrag.rel_types import DEFAULT_RELS_LIST
-from tiny_graphrag.visualize import visualize, visualize_communities
+from tiny_graphrag.rel_types import DEFAULT_RELS_LIST, NEW_RELS_LIST
+from tiny_graphrag.visualize import visualize, visualize_communities, combine_graphs
 
 
 def process_document(
@@ -35,7 +35,7 @@ def process_document(
     g = nx.Graph()
 
     for chunk_text, _embedding in tqdm(page_chunks[:max_chunks]):
-        extraction = extract_rels(chunk_text, entity_types, relation_types)
+        extraction = extract_rels(filepath, chunk_text, entity_types, relation_types)
 
         for ent in extraction.entities:
             g.add_node(ent[0], label=ent[1])
@@ -94,19 +94,19 @@ def store_document(
     engine: Engine,
     title: Optional[str] = None,
     max_chunks: int = -1,
-    temperature: float = 0.2,
+    temperature: float = 0,
 ) -> Tuple[int, str]:
     """Store document in database and save graph."""
     # Initialize database and LLM
     session_local = sessionmaker(bind=engine)
 
     llm = Llama.from_pretrained(
-        repo_id=MODEL_REPO, filename=MODEL_ID, local_dir=".", verbose=False, n_ctx=4096
+        repo_id=MODEL_REPO, filename=MODEL_ID, local_dir=".", verbose=False, n_ctx=8182
     )
 
     with session_local() as session:
         # Process document
-        chunks, graph = process_document(filepath, title, max_chunks)
+        chunks, graph = process_document(filepath, title, max_chunks, entity_types= NEW_ENTITIES, relation_types= NEW_RELS_LIST)
 
         # Store document
         doc = Document(content=open(filepath).read(), title=title or filepath)
@@ -163,6 +163,8 @@ def store_document(
         visualize_communities(
             graph, community_result.communities, f"graphs/{doc.id}_communities.png"
         )
+
+        combine_graphs([17,19])
 
         session.commit()
         return doc.id, graph_path

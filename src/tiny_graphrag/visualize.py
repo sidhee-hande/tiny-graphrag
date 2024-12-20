@@ -1,7 +1,7 @@
 from itertools import chain
 from pathlib import Path
 from typing import List, Tuple, Union
-
+import pickle
 import matplotlib.pyplot as plt
 import networkx as nx
 from matplotlib import colors as mcolors
@@ -111,3 +111,22 @@ def visualize_communities(
 
     plt.savefig(str(output_path), bbox_inches="tight", dpi=300)
     plt.close()
+
+
+def combine_graphs(doc_ids_list: list):
+    # for i in doc_ids_list:
+
+    with open("graphs/17_graph.pkl", 'rb') as f:
+        graph1 = pickle.load(f)
+
+    with open("graphs/19_graph.pkl", 'rb') as f:
+        graph2 = pickle.load(f)
+
+    F = nx.compose(graph1, graph2)
+
+    graph_path = f"graphs/combined_graph.pkl"
+    with open(graph_path, "wb") as f:
+        pickle.dump(F, f)
+
+    visualize(F, f"graphs/combined_graph.png")
+   

@@ -19,9 +19,9 @@ from tiny_graphrag.prompts import (
     NAIVE_SEARCH_RESPONSE,
 )
 
-DEFAULT_TEMPERATURE = 0.3
+DEFAULT_TEMPERATURE = 0
 DEFAULT_LIMIT = 10
-DEFAULT_CTX_LENGTH = 8192
+DEFAULT_CTX_LENGTH = 15000
 
 
 @dataclass
@@ -81,6 +81,7 @@ class QueryEngine:
         # Extract entities from query
         query_entities = self._extract_query_entities(query)
         relevant_data = self._gather_relevant_data(g, query_entities)
+        # print(relevant_data)
 
         # Build context and generate response
         context = self._build_context(relevant_data)
